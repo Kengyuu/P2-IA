@@ -23,11 +23,12 @@ public class ROOMBA_Blackboard : MonoBehaviour {
     private TextMesh energyLine;
     
     public List<GameObject> memory; // list of detected dust units not picked due to presence of poo
-
+    private GameObject[] wanderPoints; 
 	
 	void Start () {
         memory = new List<GameObject>();
         energyLine = GameObject.Find("EnergyLine").GetComponent<TextMesh>();
+        wanderPoints = GameObject.FindGameObjectsWithTag("PATROLPOINT"); 
 	}
 	
 	void Update () {
@@ -35,6 +36,10 @@ public class ROOMBA_Blackboard : MonoBehaviour {
         energyLine.text = "Charge: " + Mathf.RoundToInt(currentCharge);
     }
 
+    public GameObject GetRandomWanderPoint()
+    {
+        return wanderPoints[Random.Range(0, wanderPoints.Length)]; 
+    }
     // invoke this method while in charging station
     public void Recharge (float deltaTime)
     {
