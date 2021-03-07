@@ -11,13 +11,15 @@ namespace FSM
     public class FSM1_DUSTSEARCH : FiniteStateMachine
     {
 
-        public enum State { INITIAL, PATROLLING, GO_TO_DUST, DUST_REACHED };
+        public enum State { INITIAL, PATROLLING, GO_TO_DUST, GO_TO_POO };
         public State currentState = State.INITIAL; 
         private ROOMBA_Blackboard blackboard;
         private FSM_RouteExecutor patrolling;
 
         public GameObject dust;
-        public GameObject nearestDust; 
+        public GameObject nearestDust;
+        public GameObject poo;
+       
 
         void Awake()
         {
@@ -44,29 +46,52 @@ namespace FSM
                     ChangeState(State.PATROLLING);
                     break;
                 case State.PATROLLING:
+                    if(blackboard.memory.Count > 0)
+                    {
+                        dust = blackboard.RetrieveFromMemory();
+                        ChangeState(State.GO_TO_DUST);
+                        break; 
+                    }
+                    //POO PART 
+                    poo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.closePooDetectionRadius);
+                    if (poo == null)
+                        poo = SensingUtils.FindRandomInstanceWithinRadius(gameObject, "POO", blackboard.farPooDetectionRadius);
+
+                    if (poo != null)
+                    {
+                        ChangeState(State.GO_TO_POO);
+                        break;
+                    }
+                    // DUST PART
                     dust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.closeDustDetectionRadius);
+                    if(dust == null) 
+                        dust = SensingUtils.FindRandomInstanceWithinRadius(gameObject, "DUST", blackboard.farDustDetectionRadius);
+
                     if (dust != null)
                     {
                         ChangeState(State.GO_TO_DUST);
                         break;
-                    }
-                    else 
-                    {
-                        dust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.farDustDetectionRadius); 
-                        if(dust!= null)
-                        {
-                            Debug.Log("break");
-                            ChangeState(State.GO_TO_DUST);
-                            break; 
-                        }
-                    }
+                    }                   
                     if(patrolling.currentState == FSM_RouteExecutor.State.TERMINATED)
                     {
                         ChangeState(State.PATROLLING);
                         break; 
                     }
+                    
                     break;
+
                 case State.GO_TO_DUST:
+
+                    poo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.closePooDetectionRadius);
+                    if (poo == null)
+                        poo = SensingUtils.FindRandomInstanceWithinRadius(gameObject, "POO", blackboard.farPooDetectionRadius);
+
+                    if (poo != null)
+                    {
+                        ChangeState(State.GO_TO_POO);
+                        break;
+                    }
+
                     nearestDust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.closeDustDetectionRadius);
                     if(nearestDust != null && nearestDust != dust)
                     {
@@ -76,13 +101,32 @@ namespace FSM
                     }
                     if (SensingUtils.DistanceToTarget(gameObject,dust) < blackboard.dustReachedRadius)
                     {
-                        ChangeState(State.DUST_REACHED);
+                        dust.gameObject.SetActive(false);
+                        ChangeState(State.PATROLLING);
                         break; 
                     }
                     break;
-                case State.DUST_REACHED:
-                    ChangeState(State.PATROLLING); 
-                    break; 
+                case State.GO_TO_POO:
+                    dust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.closeDustDetectionRadius);
+                    if(dust != null && !blackboard.memory.Contains(dust))
+                    {
+                        blackboard.AddToMemory(dust); 
+                    }
+                    GameObject nearestPoo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.closePooDetectionRadius);
+                    if(nearestPoo != poo && nearestPoo != null)
+                    {
+                        poo = nearestPoo;
+                        ChangeState(State.PATROLLING);
+                        break; 
+                    }
+                    if (SensingUtils.DistanceToTarget(gameObject, poo) < blackboard.pooReachedRadius)
+                    {
+                        poo.gameObject.SetActive(false);
+                        ChangeState(State.PATROLLING);
+                        break;
+                    }
+                    break;
+
             } 
         }
 
@@ -100,8 +144,10 @@ namespace FSM
                 case State.GO_TO_DUST:
                     patrolling.Exit(); 
                     break;
-                case State.DUST_REACHED:
-                    break;
+                case State.GO_TO_POO:
+                    patrolling.Exit(); 
+                    break; 
+               
             }
 
          
@@ -115,9 +161,11 @@ namespace FSM
                     patrolling.ReEnter();
                     patrolling.target = dust;
                     break;
-                case State.DUST_REACHED:
-                    dust.gameObject.SetActive(false); 
-                    break;
+                case State.GO_TO_POO:
+                    patrolling.ReEnter();
+                    patrolling.target = poo; 
+                    break; 
+               
             } 
             currentState = newState;
 
