@@ -13,7 +13,7 @@ public class ROOMBA_Blackboard : MonoBehaviour {
     public float pooReachedRadius = 5;  // reachability radius
     public float chargingStationReachedRadius = 2;  // reachability radius
 
-    public float energyConsumptionPerSecond = 1;    
+    public float energyConsumptionPerSecond = 10;    
     public float energyRechargePerSecond = 15;
     public float minCharge = 15;    // min threshold. If currentCharge is below this figure go to recharging station    
     public float maxCharge = 99;    // max threshold. Leave charging station if currentCharge reaches this level

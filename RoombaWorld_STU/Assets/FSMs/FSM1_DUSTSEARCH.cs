@@ -21,15 +21,17 @@ namespace FSM
         public GameObject poo;
        
 
-        void Awake()
+        void Start()
         {
             blackboard = GetComponent<ROOMBA_Blackboard>();
-            patrolling = GetComponent<FSM_RouteExecutor>(); 
+            patrolling = GetComponent<FSM_RouteExecutor>();
+            //patrolling.Exit(); 
         }
 
         public override void Exit()
         {
-            patrolling.Exit(); 
+            patrolling.Exit();
+            base.Exit(); 
         }
 
         public override void ReEnter()
@@ -46,12 +48,7 @@ namespace FSM
                     ChangeState(State.PATROLLING);
                     break;
                 case State.PATROLLING:
-                    if(blackboard.memory.Count > 0)
-                    {
-                        dust = blackboard.RetrieveFromMemory();
-                        ChangeState(State.GO_TO_DUST);
-                        break; 
-                    }
+                   
                     //POO PART 
                     poo = SensingUtils.FindInstanceWithinRadius(gameObject, "POO", blackboard.closePooDetectionRadius);
                     if (poo == null)
@@ -116,12 +113,18 @@ namespace FSM
                     if(nearestPoo != poo && nearestPoo != null)
                     {
                         poo = nearestPoo;
-                        ChangeState(State.PATROLLING);
+                        ChangeState(State.GO_TO_POO);
                         break; 
                     }
                     if (SensingUtils.DistanceToTarget(gameObject, poo) < blackboard.pooReachedRadius)
                     {
                         poo.gameObject.SetActive(false);
+                        if (blackboard.memory.Count > 0)
+                        {
+                            dust = blackboard.RetrieveFromMemory();
+                            ChangeState(State.GO_TO_DUST);
+                            break;
+                        }
                         ChangeState(State.PATROLLING);
                         break;
                     }
