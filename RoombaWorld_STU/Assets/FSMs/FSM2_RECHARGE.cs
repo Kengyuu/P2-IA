@@ -7,8 +7,7 @@ using Pathfinding;
 namespace FSM
 {
     
-    public class FSM2_RECHARGE : FiniteStateMachine
-    {
+    public class FSM2_RECHARGE : FiniteStateMachine {
 
         public enum State { INITIAL, CLEANING, GO_TO_STATION,RECHARGING };
         public State currentState = State.INITIAL;
@@ -18,49 +17,38 @@ namespace FSM
 
         GameObject energyStation; 
 
-        void Start()
-        {
+        void Start() {
             blackboard = GetComponent<ROOMBA_Blackboard>();
             dustSearcher = GetComponent<FSM1_DUSTSEARCH>();
             goRecharge = GetComponent<FSM_RouteExecutor>();
-            //dustSearcher.Exit(); 
-            //goRecharge.Exit(); 
         }
 
-        public override void Exit()
-        {
+        public override void Exit() {
             dustSearcher.Exit();
             goRecharge.Exit();
             base.Exit(); 
         }
 
-        public override void ReEnter()
-        {
+        public override void ReEnter() {
             base.ReEnter();
             currentState = State.INITIAL;
         }
 
-        void Update()
-        {
-            switch (currentState)
-            {
+        void Update() {
+            switch (currentState) {
                 case State.INITIAL:
                     ChangeState(State.CLEANING);
                     break;
                 case State.CLEANING:
-                    if (blackboard.currentCharge <= blackboard.minCharge)
-                    {
+                    if (blackboard.currentCharge <= blackboard.minCharge) {
+                        energyStation = blackboard.GetClosestEnergyStation(this.gameObject); 
                         ChangeState(State.GO_TO_STATION);
                         break;
                     }
                     break;
                 case State.GO_TO_STATION:
-                    energyStation = SensingUtils.FindInstanceWithinRadius(gameObject, "ENERGY", (Camera.main.orthographicSize * Camera.main.aspect)*2); 
-                    if(energyStation != null && SensingUtils.DistanceToTarget(gameObject,energyStation) < blackboard.chargingStationReachedRadius)
-                    {
+                    if(SensingUtils.DistanceToTarget(gameObject,energyStation) < blackboard.chargingStationReachedRadius)
                         ChangeState(State.RECHARGING);
-                        break; 
-                    }
                     break;
                 case State.RECHARGING:
                     blackboard.Recharge(Time.deltaTime);
@@ -70,18 +58,12 @@ namespace FSM
                         break; 
                     }
                     break;
-             
-
             }
         }
 
 
-        private void ChangeState(State newState)
-        {
-
-
-            switch (currentState)
-            {
+        private void ChangeState(State newState) {
+            switch (currentState) {
                 case State.CLEANING:
                     dustSearcher.Exit(); 
                     break;
@@ -93,9 +75,7 @@ namespace FSM
                     break;
             }
 
-
-            switch (newState)
-            {
+            switch (newState) {
                 case State.CLEANING:
                     dustSearcher.ReEnter(); 
                     break;
@@ -107,10 +87,6 @@ namespace FSM
                     break;
             }
             currentState = newState;
-
         }
-
-
-
     }
 }

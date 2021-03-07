@@ -21,6 +21,7 @@ public class ROOMBA_Blackboard : MonoBehaviour {
     public float currentCharge = 100;
 
     private TextMesh energyLine;
+    public List<GameObject> energyStations = new List<GameObject>();
     
     public List<GameObject> memory; // list of detected dust units not picked due to presence of poo
     private GameObject[] wanderPoints; 
@@ -70,5 +71,15 @@ public class ROOMBA_Blackboard : MonoBehaviour {
             memory.RemoveAt(0);
             return result;
         }
+    }
+
+    //Get closest energy station
+    public GameObject GetClosestEnergyStation(GameObject me){
+        GameObject closest = energyStations[0];
+        foreach(GameObject g in energyStations){
+            if(SensingUtils.DistanceToTarget(me, g) > SensingUtils.DistanceToTarget(me, closest))
+                closest = g;
+        }
+        return closest;
     }
 }

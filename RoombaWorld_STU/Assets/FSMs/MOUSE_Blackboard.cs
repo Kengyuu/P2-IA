@@ -7,25 +7,18 @@ public class MOUSE_Blackboard : MonoBehaviour
     private GameObject[] exitPoints;
     public GameObject pooPrefab;
     public float roombaDetectionRadius = 50;
+    public float pointReachedRadius = 3;
+    public Color afraidColor = Color.green;
+    public bool hasPooped = false;
        
-    void Awake()
-    {
+    void Awake() {
         // let's get all the exit points
         exitPoints = GameObject.FindGameObjectsWithTag("EXIT");
 
         pooPrefab = Resources.Load<GameObject>("POO");
     }
 
-
-    void Update()
-    {
-        
-    }
-
-    public GameObject RandomExitPoint()
-    {
-        return exitPoints[Random.Range(0,exitPoints.Length)];   
-    }
+    public GameObject RandomExitPoint() => exitPoints[Random.Range(0, exitPoints.Length)];
 
     public GameObject NearestExitPoint ()
     {
