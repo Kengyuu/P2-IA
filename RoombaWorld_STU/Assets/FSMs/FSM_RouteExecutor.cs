@@ -18,14 +18,14 @@ namespace FSM
         private Seeker seeker; // the path generator
         private Path path; // the path calculated by the seeker
         private PathFollowing pathFollowing; // the steering behaviour
-        private ROOMBA_Blackboard blackboard; 
+        //private ROOMBA_Blackboard blackboard; 
                 
         void Awake()
         {
             seeker = GetComponent<Seeker>();
             pathFollowing = GetComponent<PathFollowing>();
             pathFollowing.enabled = false;
-            blackboard = GetComponent<ROOMBA_Blackboard>(); 
+            //blackboard = GetComponent<ROOMBA_Blackboard>(); 
             //pathFollowing.wayPointReachedRadius = 3f;
         }
 
@@ -71,7 +71,6 @@ namespace FSM
 
                 case State.TERMINATED:
                     // this is a PIT state
-                    ChangeState(State.INITIAL); 
                     break;
 
             } // end of switch
@@ -105,7 +104,7 @@ namespace FSM
 
                 case State.GENERATING:
                     // just ask the seeker for fresh path
-                    target = blackboard.GetRandomWanderPoint(); 
+                    //target = blackboard.GetRandomWanderPoint(); 
                     path = null;
                     seeker.StartPath(gameObject.transform.position, target.transform.position, OnPathComplete);
                     break;

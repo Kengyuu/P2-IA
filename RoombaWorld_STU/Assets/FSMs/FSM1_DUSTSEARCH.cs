@@ -16,7 +16,8 @@ namespace FSM
         private ROOMBA_Blackboard blackboard;
         private FSM_RouteExecutor patrolling;
 
-        public GameObject dust; 
+        public GameObject dust;
+        public GameObject nearestDust; 
 
         void Awake()
         {
@@ -34,15 +35,7 @@ namespace FSM
             base.ReEnter();
             currentState = State.INITIAL;
         }
-        private void OnEnable()
-        {
-            Debug.Log("Enabled");   
-        }
-        private void OnDisable()
-        {
-            Debug.Log("Disabled"); 
-        }
-
+       
         void Update()
         {
             switch (currentState)
@@ -62,21 +55,33 @@ namespace FSM
                         dust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.farDustDetectionRadius); 
                         if(dust!= null)
                         {
+                            Debug.Log("break");
                             ChangeState(State.GO_TO_DUST);
                             break; 
                         }
                     }
+                    if(patrolling.currentState == FSM_RouteExecutor.State.TERMINATED)
+                    {
+                        ChangeState(State.PATROLLING);
+                        break; 
+                    }
                     break;
                 case State.GO_TO_DUST:
-                    dust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.closeDustDetectionRadius);
-                    if(dust != null)
+                    nearestDust = SensingUtils.FindInstanceWithinRadius(gameObject, "DUST", blackboard.closeDustDetectionRadius);
+                    if(nearestDust != null && nearestDust != dust)
                     {
+                        dust = nearestDust;
                         ChangeState(State.GO_TO_DUST);
+                        break; 
+                    }
+                    if (SensingUtils.DistanceToTarget(gameObject,dust) < blackboard.dustReachedRadius)
+                    {
+                        ChangeState(State.DUST_REACHED);
                         break; 
                     }
                     break;
                 case State.DUST_REACHED:
-
+                    ChangeState(State.PATROLLING); 
                     break; 
             } 
         }
@@ -93,10 +98,9 @@ namespace FSM
                     patrolling.Exit(); 
                     break;
                 case State.GO_TO_DUST:
-                    patrolling.Exit();
+                    patrolling.Exit(); 
                     break;
                 case State.DUST_REACHED:
-                    patrolling.Exit();
                     break;
             }
 
@@ -104,18 +108,17 @@ namespace FSM
             switch (newState)
             {
                 case State.PATROLLING:
-                    patrolling.ReEnter(); 
+                    patrolling.ReEnter();
+                    patrolling.target = blackboard.GetRandomWanderPoint(); 
                     break;
                 case State.GO_TO_DUST:
                     patrolling.ReEnter();
-                    patrolling.target = dust; 
+                    patrolling.target = dust;
                     break;
                 case State.DUST_REACHED:
-                    patrolling.ReEnter(); 
+                    dust.gameObject.SetActive(false); 
                     break;
             } 
-
-
             currentState = newState;
 
         } 
